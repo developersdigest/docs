@@ -1,90 +1,69 @@
 {
   "openapi": "3.0.1",
   "info": {
-    "title": "OpenAPI Plant Store!",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
+    "title": "Simple Tools API",
+    "description": "A collection of simple tools that can be used with Model Context Protocol (MCP)",
+    "version": "1.0.0",
+    "contact": {
+      "name": "API Support",
+      "email": "support@example.com"
+    },
     "license": {
       "name": "MIT"
-    },
-    "version": "1.0.0"
+    }
   },
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
-    }
-  ],
-  "security": [
+      "url": "https://api.example.com/v1",
+      "description": "Production server"
+    },
     {
-      "bearerAuth": []
+      "url": "https://sandbox.example.com/v1",
+      "description": "Sandbox server for testing"
     }
   ],
   "paths": {
-    "/plants": {
+    "/search": {
       "get": {
-        "description": "Returns all plants from the system that the user has access to",
+        "summary": "Search for information",
+        "description": "Search for information across multiple sources",
+        "operationId": "searchInfo",
         "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "description": "Search query string",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "limit",
             "in": "query",
-            "description": "The maximum number of results to return",
+            "description": "Maximum number of results to return",
+            "required": false,
             "schema": {
               "type": "integer",
-              "format": "int32"
+              "default": 10,
+              "minimum": 1,
+              "maximum": 50
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Plant response",
+            "description": "Successful search results",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Plant"
-                  }
+                  "$ref": "#/components/schemas/SearchResults"
                 }
               }
             }
           },
           "400": {
-            "description": "Unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "description": "Creates a new plant in the store",
-        "requestBody": {
-          "description": "Plant to add to the store",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/NewPlant"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "plant response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Plant"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "unexpected error",
+            "description": "Bad request - invalid query",
             "content": {
               "application/json": {
                 "schema": {
@@ -96,28 +75,165 @@
         }
       }
     },
-    "/plants/{id}": {
-      "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
+    "/weather": {
+      "get": {
+        "summary": "Get current weather",
+        "description": "Get current weather information for a location",
+        "operationId": "getWeather",
         "parameters": [
           {
-            "name": "id",
-            "in": "path",
-            "description": "ID of plant to delete",
+            "name": "location",
+            "in": "query",
+            "description": "City name or coordinates",
             "required": true,
             "schema": {
-              "type": "integer",
-              "format": "int64"
+              "type": "string"
+            }
+          },
+          {
+            "name": "units",
+            "in": "query",
+            "description": "Unit system to use",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["metric", "imperial"],
+              "default": "metric"
             }
           }
         ],
         "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
+          "200": {
+            "description": "Successful weather data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WeatherData"
+                }
+              }
+            }
           },
           "400": {
-            "description": "unexpected error",
+            "description": "Bad request - invalid location",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Location not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/translate": {
+      "post": {
+        "summary": "Translate text",
+        "description": "Translate text from one language to another",
+        "operationId": "translateText",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["text", "targetLanguage"],
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "description": "Text to translate"
+                  },
+                  "sourceLanguage": {
+                    "type": "string",
+                    "description": "Source language code (ISO 639-1)",
+                    "example": "en"
+                  },
+                  "targetLanguage": {
+                    "type": "string",
+                    "description": "Target language code (ISO 639-1)",
+                    "example": "fr"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful translation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranslationResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/summarize": {
+      "post": {
+        "summary": "Summarize text",
+        "description": "Generate a concise summary of provided text",
+        "operationId": "summarizeText",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["text"],
+                "properties": {
+                  "text": {
+                    "type": "string",
+                    "description": "Text to summarize"
+                  },
+                  "maxLength": {
+                    "type": "integer",
+                    "description": "Maximum length of summary in characters",
+                    "default": 200,
+                    "minimum": 50,
+                    "maximum": 500
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SummaryResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid parameters",
             "content": {
               "application/json": {
                 "schema": {
@@ -132,64 +248,154 @@
   },
   "components": {
     "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
+      "SearchResults": {
         "type": "object",
         "properties": {
-          "name": {
-            "description": "The name of the plant",
-            "type": "string"
+          "query": {
+            "type": "string",
+            "description": "The search query used"
           },
-          "tag": {
-            "description": "Tag to specify the type",
-            "type": "string"
-          }
-        }
-      },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Plant"
+          "totalResults": {
+            "type": "integer",
+            "description": "Total number of results found"
           },
-          {
-            "required": [
-              "id"
-            ],
-            "type": "object",
-            "properties": {
-              "id": {
-                "description": "Identification number of the plant",
-                "type": "integer",
-                "format": "int64"
+          "results": {
+            "type": "array",
+            "description": "List of search results",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "Title of the result"
+                },
+                "snippet": {
+                  "type": "string",
+                  "description": "Text snippet from the result"
+                },
+                "url": {
+                  "type": "string",
+                  "description": "URL of the result",
+                  "format": "uri"
+                }
               }
             }
           }
-        ]
+        }
       },
-      "Error": {
-        "required": [
-          "error",
-          "message" 
-        ],
+      "WeatherData": {
         "type": "object",
         "properties": {
-          "error": {
+          "location": {
+            "type": "string",
+            "description": "Location name"
+          },
+          "temperature": {
+            "type": "number",
+            "description": "Current temperature"
+          },
+          "condition": {
+            "type": "string",
+            "description": "Weather condition (e.g., sunny, cloudy)"
+          },
+          "humidity": {
+            "type": "number",
+            "description": "Humidity percentage"
+          },
+          "windSpeed": {
+            "type": "number",
+            "description": "Wind speed"
+          },
+          "windDirection": {
+            "type": "string",
+            "description": "Wind direction"
+          },
+          "units": {
+            "type": "string",
+            "description": "Unit system used (metric or imperial)"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Timestamp of the weather data",
+            "format": "date-time"
+          }
+        }
+      },
+      "TranslationResult": {
+        "type": "object",
+        "properties": {
+          "originalText": {
+            "type": "string",
+            "description": "Original text that was translated"
+          },
+          "translatedText": {
+            "type": "string",
+            "description": "Translated text"
+          },
+          "sourceLanguage": {
+            "type": "string",
+            "description": "Source language code"
+          },
+          "targetLanguage": {
+            "type": "string",
+            "description": "Target language code"
+          }
+        }
+      },
+      "SummaryResult": {
+        "type": "object",
+        "properties": {
+          "originalText": {
+            "type": "string",
+            "description": "Original text that was summarized"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Generated summary"
+          },
+          "originalLength": {
             "type": "integer",
-            "format": "int32"
+            "description": "Character count of original text"
+          },
+          "summaryLength": {
+            "type": "integer",
+            "description": "Character count of summary"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "required": ["code", "message"],
+        "properties": {
+          "code": {
+            "type": "integer",
+            "description": "Error code"
           },
           "message": {
-            "type": "string"
+            "type": "string",
+            "description": "Error message"
           }
         }
       }
     },
     "securitySchemes": {
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API key for authentication"
+      },
       "bearerAuth": {
         "type": "http",
-        "scheme": "bearer"
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT token for authentication"
       }
     }
-  }
+  },
+  "security": [
+    {
+      "apiKey": []
+    }
+  ]
 }
